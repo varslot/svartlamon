@@ -55,7 +55,7 @@ void setup() {
       int idx = indices.get(i); // Get a random index
       xPos[i] = (int) random(width);  // Random x position within the canvas
       yPos[i] = (int) random(height); // Random y position within the canvas
-      pg.shape(svgs[idx], xPos[i], yPos[i], 100, 100); // Draw shape at (xPos, yPos) with width and height of 400
+      pg.shape(svgs[idx], xPos[i], yPos[i], 300, 300); // Draw shape at (xPos, yPos) with width and height of 400
     }
 
     pg.endDraw();  // Finish drawing
