@@ -8,40 +8,40 @@ ControlP5 cp5;
 ColorWheel cpFill;
 ColorWheel cpBg;
 
-// Initialize default colors
-int bgColor = color(255, 136, 38, 255);    // Default background color - Orange with some transparency
-int shapeFill = color(238, 202, 239, 255);  // Default shape fill color - Same as background
-
-// Variables
-int numberOfShapes = 78;  // Dynamic number of shapes to draw per SVG, easily adjustable
+int numberOfShapes;  // Dynamically set based on loaded files
 int numberOfFiles = 12;    // Number of files to be exported
-int shapeSize = 100;      // Size of Shapes
+int shapeSize = 100;      // Used for scaling shapes
+float scaleFactor;        // Scale factor for drawing shapes
+float largestDimension = 0;  // Initialize the largest dimension to zero
 
-PShape[] svgs;            // Array to hold SVG shapes, size will be set dynamically
-int[] xPos;
-int[] yPos;
+// Global color definitions
+int bgColor = color(255, 136, 38, 255);    // Default background color - Orange with full opacity
+int shapeFill = color(238, 202, 239, 255); // Default shape fill color - Light purple with full opacity
+
+
+PShape[] svgs;            // Array to hold SVG shapes
 PGraphics pg;
 PGraphics preview;
 
 void setup() {
-  size(1024, 1024); // Set the size of the canvas
-  surface.setResizable(true);
-
+  size(1024, 1024);
   preview = createGraphics(1024, 1024, JAVA2D);
-
-  // Setup ControlP5
   cp5 = new ControlP5(this);
 
-  // Load SVGs and determine the number of shapes
   File dir = new File(sketchPath("assets"));
   File[] files = dir.listFiles((File file) -> file.getName().endsWith(".svg"));
-  svgs = new PShape[files.length];  // Initialize the array with the number of SVG files
-  numberOfShapes = files.length;    // Set numberOfShapes based on the number of SVG files
+  svgs = new PShape[files.length];
+  numberOfShapes = files.length;
 
   for (int i = 0; i < files.length; i++) {
     svgs[i] = loadShape(files[i].getAbsolutePath());
-    svgs[i].disableStyle();  // Disables the SVG's own style
+    svgs[i].disableStyle();  // Disable the SVG's own style
+    float w = svgs[i].width;
+    float h = svgs[i].height;
+    largestDimension = max(largestDimension, max(w, h));  // Find the maximum dimension
   }
+
+  scaleFactor = shapeSize / largestDimension;  // Set the initial scale factor
 
   cp5.addSlider("numberOfShapes")
     .setRange(1, numberOfShapes)
@@ -62,13 +62,15 @@ void setup() {
     .setSize(200, 20)
     .addListener(new ControlListener() {
     public void controlEvent(ControlEvent event) {
+      shapeSize = (int) event.getController().getValue();
+      scaleFactor = shapeSize / largestDimension;  // Recalculate the scale factor
       updatePreview();
     }
   }
   );
 
   cp5.addSlider("Files")
-    .setRange(1, 100)
+    .setRange(1, numberOfFiles)
     .setValue(numberOfFiles)
     .setDecimalPrecision(0)
     .setPosition(10, 90)
@@ -76,7 +78,7 @@ void setup() {
 
   cpFill = cp5.addColorWheel("fillPicker")
     .setPosition(10, 130)
-    .setColorValue(color(255, 128, 0, 128)) // Initial RGBA color
+    .setColorValue(shapeFill)
     .addListener(new ControlListener() {
     public void controlEvent(ControlEvent event) {
       shapeFill = cpFill.getRGB(); // Update global shape fill color variable
@@ -87,10 +89,10 @@ void setup() {
 
   cpBg = cp5.addColorWheel("bgPicker")
     .setPosition(220, 130)
-    .setColorValue(color(255, 128, 0, 128)) // Initial RGBA color
+    .setColorValue(bgColor)
     .addListener(new ControlListener() {
     public void controlEvent(ControlEvent event) {
-      bgColor = cpBg.getRGB(); // Update global shape fill color variable
+      bgColor = cpBg.getRGB(); // Update global background color variable
       updatePreview(); // Update the preview whenever the color changes
     }
   }
@@ -99,9 +101,8 @@ void setup() {
   cp5.addButton("Export")
     .setPosition(10, 400)
     .setSize(80, 40)
-    .setId(4)
-    .onRelease(new CallbackListener() {
-    public void controlEvent(CallbackEvent event) {
+    .addListener(new ControlListener() {
+    public void controlEvent(ControlEvent event) {
       exportSVGs();
     }
   }
@@ -117,8 +118,8 @@ void draw() {
 
 void updatePreview() {
   preview.beginDraw();
-  preview.background(bgColor);  // Use the color picked for background
-  preview.fill(shapeFill);      // Use the color picked for shapes fill
+  preview.background(bgColor);
+  preview.fill(shapeFill);
   preview.noStroke();
 
   ArrayList<Integer> indices = new ArrayList<Integer>();
@@ -129,61 +130,56 @@ void updatePreview() {
     int idx = indices.get(i);
     float w = svgs[idx].width;
     float h = svgs[idx].height;
-    float x = random(w/2, preview.width - w/2);
-    float y = random(h/2, preview.height - h/2);
-    float scaleFactor = shapeSize / max(w, h);  // Calculate scale factor to maintain aspect ratio
-
+    float x = random(w * scaleFactor / 2, preview.width - (w * scaleFactor / 2));
+    float y = random(h * scaleFactor / 2, preview.height - (h * scaleFactor / 2));
     preview.pushMatrix();
     preview.translate(x, y);
-    preview.scale(scaleFactor);  // Apply scaling to maintain proportions
-    preview.shape(svgs[idx], -w/2, -h/2);
+    preview.scale(scaleFactor);  // Apply the scale factor uniformly to the shape
+    preview.shape(svgs[idx], -w / 2, -h / 2);
     preview.popMatrix();
   }
   preview.endDraw();
 }
 
-
 void exportSVGs() {
-    String username = System.getProperty("user.name");
-    String baseFolderPath = "/Users/" + username + "/Downloads/Svartlamoen";
-    String folderPath = baseFolderPath + "-01";
-    File folderDir = new File(folderPath);
-    int suffix = 2;
+  String username = System.getProperty("user.name");
+  String baseFolderPath = "/Users/" + username + "/Downloads/Svartlamoen";
+  String folderPath = baseFolderPath + "-01";
+  File folderDir = new File(folderPath);
+  int suffix = 2;
 
-    while (folderDir.exists()) {
-        folderPath = baseFolderPath + "-" + nf(suffix++, 2);
-        folderDir = new File(folderPath);
+  while (folderDir.exists()) {
+    folderPath = baseFolderPath + "-" + nf(suffix++, 2);
+    folderDir = new File(folderPath);
+  }
+  folderDir.mkdirs();
+
+  for (int fileNum = 1; fileNum <= numberOfFiles; fileNum++) {
+    String filePath = folderPath + "/output-" + nf(fileNum, 2) + ".svg";
+    pg = createGraphics(1024, 1024, SVG, filePath);
+    pg.beginDraw();
+    pg.background(bgColor);
+    pg.noStroke();
+    pg.fill(shapeFill);
+
+    ArrayList<Integer> indices = new ArrayList<Integer>();
+    for (int i = 0; i < svgs.length; i++) indices.add(i);
+    Collections.shuffle(indices);
+
+    for (int i = 0; i < numberOfShapes; i++) {
+      int idx = indices.get(i);
+      float w = svgs[idx].width;
+      float h = svgs[idx].height;
+      float x = random(w * scaleFactor / 2, pg.width - (w * scaleFactor / 2));
+      float y = random(h * scaleFactor / 2, pg.height - (h * scaleFactor / 2));
+      pg.pushMatrix();
+      pg.translate(x, y);
+      pg.scale(scaleFactor);  // Scale the SVG to fit within the maximum dimension
+      pg.shape(svgs[idx], -w / 2, -h / 2);
+      pg.popMatrix();
     }
-    folderDir.mkdirs();
 
-    for (int fileNum = 1; fileNum <= numberOfFiles; fileNum++) {
-        String filePath = folderPath + "/output-" + nf(fileNum, 2) + ".svg";
-        pg = createGraphics(1024, 1024, SVG, filePath);
-        pg.beginDraw();
-        pg.background(bgColor);
-        pg.noStroke();
-        pg.fill(shapeFill);
-
-        ArrayList<Integer> indices = new ArrayList<Integer>();
-        for (int i = 0; i < svgs.length; i++) indices.add(i);
-        Collections.shuffle(indices);
-
-        for (int i = 0; i < numberOfShapes; i++) {
-            int idx = indices.get(i);
-            float w = svgs[idx].width;
-            float h = svgs[idx].height;
-            float x = random(w/2, pg.width - w/2);
-            float y = random(h/2, pg.height - h/2);
-            float scaleFactor = shapeSize / max(w, h);  // Calculate scale factor to maintain aspect ratio
-
-            pg.pushMatrix();
-            pg.translate(x, y);
-            pg.scale(scaleFactor);  // Apply scaling to maintain proportions
-            pg.shape(svgs[idx], -w/2, -h/2);
-            pg.popMatrix();
-        }
-
-        pg.endDraw();
-        pg.dispose();
-    }
+    pg.endDraw();
+    pg.dispose();
+  }
 }
