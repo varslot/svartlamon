@@ -1,8 +1,9 @@
- import processing.svg.*;
+import processing.svg.*;
 import java.util.Collections;
 import java.util.ArrayList;
+import java.io.File;
 
-PShape[] svgs;   // Array to hold all 50 SVG shapes
+PShape[] svgs;   // Array to hold SVG shapes, size will be set dynamically
 int[] xPos;
 int[] yPos;
 PGraphics pg;
@@ -10,36 +11,37 @@ PGraphics pg;
 void setup() {
   size(800, 600); // Set the size of the canvas
 
-  svgs = new PShape[50];  // Array to hold all 50 SVGs
-  xPos = new int[8];     // Array to hold x positions for the 8 randomly selected SVGs
-  yPos = new int[8];     // Array to hold y positions for the 8 randomly selected SVGs
+  // Dynamically load all SVG files from the 'assets' folder
+  File dir = new File(sketchPath("assets"));
+  File[] files = dir.listFiles((File file) -> file.getName().endsWith(".svg"));
+  svgs = new PShape[files.length];  // Initialize the array now that we know the number of SVG files
+  xPos = new int[8];     // Array to hold x positions for 8 randomly selected SVGs
+  yPos = new int[8];     // Array to hold y positions for 8 randomly selected SVGs
 
-  // Load all 50 SVG files from the 'assets' folder
-  for (int i = 0; i < 50; i++) {
-    svgs[i] = loadShape("assets/Asset " + (i + 1) + ".svg");
+  for (int i = 0; i < files.length; i++) {
+    svgs[i] = loadShape(files[i].getAbsolutePath());
     svgs[i].disableStyle();  // Disables the SVG's own style
   }
 
   // Define the base folder path
-  String username = System.getProperty("user.name"); // Automatically fetches the macOS username
-  String baseFolderPath = "/Users/" + username + "/Downloads/Svartlamoen"; // Path to the new folder
+  String baseFolderPath = "/Users/" + System.getProperty("user.name") + "/Downloads/Svartlamoen"; // Path to the new folder
 
   // Ensure the folder starts with Svartlamoen-01
   String folderPath = baseFolderPath + "-01";
-  File dir = new File(folderPath);
+  File folderDir = new File(folderPath);
   int suffix = 2;  // Start checking from Svartlamoen-02 if Svartlamoen-01 exists
 
   // Check if the folder exists and find a unique name
-  while (dir.exists()) {
+  while (folderDir.exists()) {
     folderPath = baseFolderPath + "-" + nf(suffix++, 2); // Increment suffix and format with leading zeros
-    dir = new File(folderPath);
+    folderDir = new File(folderPath);
   }
-  dir.mkdirs(); // Make the directory once a unique name is found
+  folderDir.mkdirs(); // Make the directory once a unique name is found
 
   // Generate and save SVG files
-  for (int fileNum = 1; fileNum <= 24; fileNum++) {
+  for (int fileNum = 1; fileNum <= 64; fileNum++) {
     ArrayList<Integer> indices = new ArrayList<Integer>();
-    for (int i = 0; i < 50; i++) indices.add(i);  // Create an index list from 0 to 49
+    for (int i = 0; i < svgs.length; i++) indices.add(i);  // Create an index list from 0 to the number of loaded SVGs
     Collections.shuffle(indices);  // Shuffle the list to randomize
 
     // Setup SVG output for each file
