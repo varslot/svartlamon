@@ -32,8 +32,19 @@ void setup() {
   // Setup ControlP5
   cp5 = new ControlP5(this);
 
+  // Load SVGs and determine the number of shapes
+  File dir = new File(sketchPath("assets"));
+  File[] files = dir.listFiles((File file) -> file.getName().endsWith(".svg"));
+  svgs = new PShape[files.length];  // Initialize the array with the number of SVG files
+  numberOfShapes = files.length;    // Set numberOfShapes based on the number of SVG files
+
+  for (int i = 0; i < files.length; i++) {
+    svgs[i] = loadShape(files[i].getAbsolutePath());
+    svgs[i].disableStyle();  // Disables the SVG's own style
+  }
+
   cp5.addSlider("numberOfShapes")
-    .setRange(1, 78)
+    .setRange(1, numberOfShapes)
     .setValue(numberOfShapes)
     .setPosition(10, 30)
     .setSize(200, 20)
@@ -95,15 +106,6 @@ void setup() {
     }
   }
   );
-
-  // Load SVGs
-  File dir = new File(sketchPath("assets"));
-  File[] files = dir.listFiles((File file) -> file.getName().endsWith(".svg"));
-  svgs = new PShape[files.length];
-  for (int i = 0; i < files.length; i++) {
-    svgs[i] = loadShape(files[i].getAbsolutePath());
-    svgs[i].disableStyle();  // Disables the SVG's own style
-  }
 
   updatePreview();
 }
