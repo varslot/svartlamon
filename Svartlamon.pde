@@ -3,6 +3,12 @@ import java.util.Collections;
 import java.util.ArrayList;
 import java.io.File;
 
+// Live's Variables
+int numberOfShapes = 24;  // Dynamic number of shapes to draw per SVG, easily adjustable
+int bgColor = #16A57C; // Background Color
+int shapeFill = #EECAEF; // Shape Color
+int shapeSize = 400; // Size of Shapes
+
 PShape[] svgs;   // Array to hold SVG shapes, size will be set dynamically
 int[] xPos;
 int[] yPos;
@@ -15,8 +21,8 @@ void setup() {
   File dir = new File(sketchPath("assets"));
   File[] files = dir.listFiles((File file) -> file.getName().endsWith(".svg"));
   svgs = new PShape[files.length];  // Initialize the array now that we know the number of SVG files
-  xPos = new int[8];     // Array to hold x positions for 8 randomly selected SVGs
-  yPos = new int[8];     // Array to hold y positions for 8 randomly selected SVGs
+  xPos = new int[numberOfShapes];   // Initialize x positions array for dynamic number of shapes
+  yPos = new int[numberOfShapes];   // Initialize y positions array for dynamic number of shapes
 
   for (int i = 0; i < files.length; i++) {
     svgs[i] = loadShape(files[i].getAbsolutePath());
@@ -24,7 +30,8 @@ void setup() {
   }
 
   // Define the base folder path
-  String baseFolderPath = "/Users/" + System.getProperty("user.name") + "/Downloads/Svartlamoen"; // Path to the new folder
+  String username = System.getProperty("user.name"); // Automatically fetches the macOS username
+  String baseFolderPath = "/Users/" + username + "/Downloads/Svartlamoen"; // Path to the new folder
 
   // Ensure the folder starts with Svartlamoen-01
   String folderPath = baseFolderPath + "-01";
@@ -52,12 +59,12 @@ void setup() {
     pg.fill(#EECAEF);       // Set the fill color to hex #EECAEF for all shapes
     pg.noStroke();          // Disable stroke for all shapes
 
-    // Draw 8 random SVGs from the shuffled list
-    for (int i = 0; i < 8; i++) {
+    // Draw a dynamic number of random SVGs from the shuffled list
+    for (int i = 0; i < numberOfShapes; i++) {
       int idx = indices.get(i); // Get a random index
       xPos[i] = (int) random(width);  // Random x position within the canvas
       yPos[i] = (int) random(height); // Random y position within the canvas
-      pg.shape(svgs[idx], xPos[i], yPos[i], 300, 300); // Draw shape at (xPos, yPos) with width and height of 400
+      pg.shape(svgs[idx], xPos[i], yPos[i], shapeSize, shapeSize); // Draw shape at (xPos, yPos) with width and height of 400
     }
 
     pg.endDraw();  // Finish drawing
