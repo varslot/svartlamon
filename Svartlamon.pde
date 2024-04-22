@@ -5,9 +5,10 @@ import java.io.File;
 
 // Live's Variables
 int numberOfShapes = 24;  // Dynamic number of shapes to draw per SVG, easily adjustable
+int numberOfFiles = 12; // Number of files to be exported
 int bgColor = #16A57C; // Background Color
 int shapeFill = #EECAEF; // Shape Color
-int shapeSize = 400; // Size of Shapes
+int shapeSize = 50; // Size of Shapes
 
 PShape[] svgs;   // Array to hold SVG shapes, size will be set dynamically
 int[] xPos;
@@ -15,7 +16,7 @@ int[] yPos;
 PGraphics pg;
 
 void setup() {
-  size(800, 600); // Set the size of the canvas
+  size(1024, 1024); // Set the size of the canvas
 
   // Dynamically load all SVG files from the 'assets' folder
   File dir = new File(sketchPath("assets"));
@@ -46,7 +47,7 @@ void setup() {
   folderDir.mkdirs(); // Make the directory once a unique name is found
 
   // Generate and save SVG files
-  for (int fileNum = 1; fileNum <= 64; fileNum++) {
+  for (int fileNum = 1; fileNum <= numberOfFiles; fileNum++) {
     ArrayList<Integer> indices = new ArrayList<Integer>();
     for (int i = 0; i < svgs.length; i++) indices.add(i);  // Create an index list from 0 to the number of loaded SVGs
     Collections.shuffle(indices);  // Shuffle the list to randomize
@@ -55,8 +56,8 @@ void setup() {
     String filePath = folderPath + "/output-" + nf(fileNum, 2) + ".svg";
     pg = createGraphics(width, height, SVG, filePath);
     pg.beginDraw();
-    pg.background(#16A57C); // Set the background color to hex #16A57C
-    pg.fill(#EECAEF);       // Set the fill color to hex #EECAEF for all shapes
+    pg.background(bgColor); // Set the background color to hex #16A57C
+    pg.fill(shapeFill);       // Set the fill color to hex #EECAEF for all shapes
     pg.noStroke();          // Disable stroke for all shapes
 
     // Draw a dynamic number of random SVGs from the shuffled list
