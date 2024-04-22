@@ -10,14 +10,13 @@ ColorWheel cpBg;
 
 int numberOfShapes;  // Dynamically set based on loaded files
 int numberOfFiles = 12;    // Number of files to be exported
-int shapeSize = 100;      // Used for scaling shapes
+int shapeSize = 350;      // Used for scaling shapes
 float scaleFactor;        // Scale factor for drawing shapes
 float largestDimension = 0;  // Initialize the largest dimension to zero
 
 // Global color definitions
 int bgColor = color(255, 136, 38, 255);    // Default background color - Orange with full opacity
 int shapeFill = color(238, 202, 239, 255); // Default shape fill color - Light purple with full opacity
-
 
 PShape[] svgs;            // Array to hold SVG shapes
 PGraphics pg;
@@ -118,8 +117,8 @@ void draw() {
 
 void updatePreview() {
   preview.beginDraw();
-  preview.background(bgColor);
-  preview.fill(shapeFill);
+  preview.background(bgColor);  // Use the color picked from the ColorWheel for background
+  preview.fill(shapeFill);      // Use the color picked from the ColorWheel for shapes fill
   preview.noStroke();
 
   ArrayList<Integer> indices = new ArrayList<Integer>();
@@ -132,14 +131,18 @@ void updatePreview() {
     float h = svgs[idx].height;
     float x = random(w * scaleFactor / 2, preview.width - (w * scaleFactor / 2));
     float y = random(h * scaleFactor / 2, preview.height - (h * scaleFactor / 2));
-    preview.pushMatrix();
-    preview.translate(x, y);
-    preview.scale(scaleFactor);  // Apply the scale factor uniformly to the shape
-    preview.shape(svgs[idx], -w / 2, -h / 2);
-    preview.popMatrix();
+    float angle = random(TWO_PI);  // Random angle for rotation in radians
+
+    preview.pushMatrix();  // Save the current state of the matrix
+    preview.translate(x, y);  // Translate to the drawing location
+    preview.rotate(angle);  // Rotate by a random angle
+    preview.scale(scaleFactor);  // Scale the shape to fit the drawing area
+    preview.shape(svgs[idx], -w / 2, -h / 2);  // Draw the shape centered
+    preview.popMatrix();  // Restore the matrix state
   }
   preview.endDraw();
 }
+
 
 void exportSVGs() {
   String username = System.getProperty("user.name");
@@ -172,9 +175,12 @@ void exportSVGs() {
       float h = svgs[idx].height;
       float x = random(w * scaleFactor / 2, pg.width - (w * scaleFactor / 2));
       float y = random(h * scaleFactor / 2, pg.height - (h * scaleFactor / 2));
+      float angle = random(TWO_PI);  // Random angle for rotation in radians
+
       pg.pushMatrix();
       pg.translate(x, y);
-      pg.scale(scaleFactor);  // Scale the SVG to fit within the maximum dimension
+      pg.rotate(angle);  // Apply random rotation
+      pg.scale(scaleFactor);  // Apply uniform scaling
       pg.shape(svgs[idx], -w / 2, -h / 2);
       pg.popMatrix();
     }
