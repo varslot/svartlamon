@@ -30,7 +30,7 @@ This Processing application allows users to dynamically load SVG files from a sp
 3. **Download Project**
 
    - Download this project as a zip file and extract it.
-   - Alternatively, clone the repo: `git clone https://github.com/yourusername/your-repository-name.git`
+   - Alternatively, clone the repo: `git clone https://github.com/varslot/svarlamon.git`
 
 4. **Open Project**
    - Open the Processing IDE and then open the downloaded project (`.pde` file).
