@@ -5,13 +5,17 @@ import java.util.ArrayList;
 import java.io.File;
 
 ControlP5 cp5;
+ColorWheel cpFill;
+ColorWheel cpBg;
+
+// Initialize default colors
+int bgColor = color(255, 136, 38, 255);    // Default background color - Orange with some transparency
+int shapeFill = color(238, 202, 239, 255);  // Default shape fill color - Same as background
 
 // Variables
 int numberOfShapes = 78;  // Dynamic number of shapes to draw per SVG, easily adjustable
 int numberOfFiles = 12;    // Number of files to be exported
-int bgColor = #16A57C;    // Background Color
-int shapeFill = #EECAEF;  // Shape Color
-int shapeSize = 200;      // Size of Shapes
+int shapeSize = 100;      // Size of Shapes
 
 PShape[] svgs;            // Array to hold SVG shapes, size will be set dynamically
 int[] xPos;
@@ -23,6 +27,8 @@ void setup() {
   size(1024, 1024); // Set the size of the canvas
   surface.setResizable(true);
 
+  preview = createGraphics(1024, 1024, JAVA2D);
+
   // Setup ControlP5
   cp5 = new ControlP5(this);
 
@@ -31,45 +37,60 @@ void setup() {
     .setValue(numberOfShapes)
     .setPosition(10, 30)
     .setSize(200, 20)
-    .setId(1);
+    .addListener(new ControlListener() {
+    public void controlEvent(ControlEvent event) {
+      updatePreview();
+    }
+  }
+  );
 
   cp5.addSlider("shapeSize")
     .setRange(50, 1000)
     .setValue(shapeSize)
     .setPosition(10, 60)
     .setSize(200, 20)
-    .setId(3);
+    .addListener(new ControlListener() {
+    public void controlEvent(ControlEvent event) {
+      updatePreview();
+    }
+  }
+  );
 
   cp5.addSlider("Files")
     .setRange(1, 100)
     .setValue(numberOfFiles)
     .setDecimalPrecision(0)
     .setPosition(10, 90)
-    .setSize(200, 20)
-    .setId(2);
+    .setSize(200, 20);
+
+  cpFill = cp5.addColorWheel("fillPicker")
+    .setPosition(10, 130)
+    .setColorValue(color(255, 128, 0, 128)) // Initial RGBA color
+    .addListener(new ControlListener() {
+    public void controlEvent(ControlEvent event) {
+      shapeFill = cpFill.getRGB(); // Update global shape fill color variable
+      updatePreview(); // Update the preview whenever the color changes
+    }
+  }
+  );
+
+  cpBg = cp5.addColorWheel("bgPicker")
+    .setPosition(220, 130)
+    .setColorValue(color(255, 128, 0, 128)) // Initial RGBA color
+    .addListener(new ControlListener() {
+    public void controlEvent(ControlEvent event) {
+      bgColor = cpBg.getRGB(); // Update global shape fill color variable
+      updatePreview(); // Update the preview whenever the color changes
+    }
+  }
+  );
 
   cp5.addButton("Export")
-    .setPosition(10, 150)
+    .setPosition(10, 400)
     .setSize(80, 40)
-    .setId(4);
-
-  // Add listeners
-  cp5.getController("numberOfShapes").addListener(new ControlListener() {
-    public void controlEvent(ControlEvent event) {
-      updatePreview();
-    }
-  }
-  );
-
-  cp5.getController("shapeSize").addListener(new ControlListener() {
-    public void controlEvent(ControlEvent event) {
-      updatePreview();
-    }
-  }
-  );
-
-  cp5.getController("Export").addListener(new ControlListener() {
-    public void controlEvent(ControlEvent event) {
+    .setId(4)
+    .onRelease(new CallbackListener() {
+    public void controlEvent(CallbackEvent event) {
       exportSVGs();
     }
   }
@@ -84,7 +105,6 @@ void setup() {
     svgs[i].disableStyle();  // Disables the SVG's own style
   }
 
-  preview = createGraphics(1024, 1024, JAVA2D);
   updatePreview();
 }
 
@@ -95,9 +115,9 @@ void draw() {
 
 void updatePreview() {
   preview.beginDraw();
-  preview.background(bgColor);
+  preview.background(bgColor); // Uses the color picked from the ColorPicker for background
+  preview.fill(shapeFill);       // Uses the color picked from the ColorPicker for shapes fill
   preview.noStroke();
-  preview.fill(shapeFill);
 
   ArrayList<Integer> indices = new ArrayList<Integer>();
   for (int i = 0; i < svgs.length; i++) indices.add(i);
@@ -105,9 +125,14 @@ void updatePreview() {
 
   for (int i = 0; i < numberOfShapes; i++) {
     int idx = indices.get(i);
-    int x = (int) random(shapeSize/2.0, preview.width - shapeSize/2.0);  // Adjusted random call for float parameters
-    int y = (int) random(shapeSize/2.0, preview.height - shapeSize/2.0); // Adjusted random call for float parameters
-    preview.shape(svgs[idx], x, y, shapeSize, shapeSize);
+    float w = svgs[idx].width;
+    float h = svgs[idx].height;
+    float x = random(w/2, preview.width - w/2);
+    float y = random(h/2, preview.height - h/2);
+    preview.pushMatrix();
+    preview.translate(x, y);
+    preview.shape(svgs[idx], -w/2, -h/2, shapeSize, shapeSize);
+    preview.popMatrix();
   }
   preview.endDraw();
 }
@@ -139,9 +164,14 @@ void exportSVGs() {
 
     for (int i = 0; i < numberOfShapes; i++) {
       int idx = indices.get(i);
-      int x = (int) random(shapeSize/2.0, preview.width - shapeSize/2.0);  // Adjusted random call for float parameters
-      int y = (int) random(shapeSize/2.0, preview.height - shapeSize/2.0); // Adjusted random call for float parameters
-      pg.shape(svgs[idx], x, y, shapeSize, shapeSize);
+      float w = svgs[idx].width;
+      float h = svgs[idx].height;
+      float x = random(w/2, pg.width - w/2);
+      float y = random(h/2, pg.height - h/2);
+      pg.pushMatrix();
+      pg.translate(x, y);
+      pg.shape(svgs[idx], -w/2, -h/2, shapeSize, shapeSize);
+      pg.popMatrix();
     }
 
     pg.endDraw();
