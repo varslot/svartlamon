@@ -117,8 +117,8 @@ void draw() {
 
 void updatePreview() {
   preview.beginDraw();
-  preview.background(bgColor); // Uses the color picked from the ColorPicker for background
-  preview.fill(shapeFill);       // Uses the color picked from the ColorPicker for shapes fill
+  preview.background(bgColor);  // Use the color picked for background
+  preview.fill(shapeFill);      // Use the color picked for shapes fill
   preview.noStroke();
 
   ArrayList<Integer> indices = new ArrayList<Integer>();
@@ -131,52 +131,59 @@ void updatePreview() {
     float h = svgs[idx].height;
     float x = random(w/2, preview.width - w/2);
     float y = random(h/2, preview.height - h/2);
+    float scaleFactor = shapeSize / max(w, h);  // Calculate scale factor to maintain aspect ratio
+
     preview.pushMatrix();
     preview.translate(x, y);
-    preview.shape(svgs[idx], -w/2, -h/2, shapeSize, shapeSize);
+    preview.scale(scaleFactor);  // Apply scaling to maintain proportions
+    preview.shape(svgs[idx], -w/2, -h/2);
     preview.popMatrix();
   }
   preview.endDraw();
 }
 
+
 void exportSVGs() {
-  String username = System.getProperty("user.name");
-  String baseFolderPath = "/Users/" + username + "/Downloads/Svartlamoen";
-  String folderPath = baseFolderPath + "-01";
-  File folderDir = new File(folderPath);
-  int suffix = 2;
+    String username = System.getProperty("user.name");
+    String baseFolderPath = "/Users/" + username + "/Downloads/Svartlamoen";
+    String folderPath = baseFolderPath + "-01";
+    File folderDir = new File(folderPath);
+    int suffix = 2;
 
-  while (folderDir.exists()) {
-    folderPath = baseFolderPath + "-" + nf(suffix++, 2);
-    folderDir = new File(folderPath);
-  }
-  folderDir.mkdirs();
-
-  for (int fileNum = 1; fileNum <= numberOfFiles; fileNum++) {
-    String filePath = folderPath + "/output-" + nf(fileNum, 2) + ".svg";
-    pg = createGraphics(1024, 1024, SVG, filePath);
-    pg.beginDraw();
-    pg.background(bgColor);
-    pg.noStroke();
-    pg.fill(shapeFill);
-
-    ArrayList<Integer> indices = new ArrayList<Integer>();
-    for (int i = 0; i < svgs.length; i++) indices.add(i);
-    Collections.shuffle(indices);
-
-    for (int i = 0; i < numberOfShapes; i++) {
-      int idx = indices.get(i);
-      float w = svgs[idx].width;
-      float h = svgs[idx].height;
-      float x = random(w/2, pg.width - w/2);
-      float y = random(h/2, pg.height - h/2);
-      pg.pushMatrix();
-      pg.translate(x, y);
-      pg.shape(svgs[idx], -w/2, -h/2, shapeSize, shapeSize);
-      pg.popMatrix();
+    while (folderDir.exists()) {
+        folderPath = baseFolderPath + "-" + nf(suffix++, 2);
+        folderDir = new File(folderPath);
     }
+    folderDir.mkdirs();
 
-    pg.endDraw();
-    pg.dispose();
-  }
+    for (int fileNum = 1; fileNum <= numberOfFiles; fileNum++) {
+        String filePath = folderPath + "/output-" + nf(fileNum, 2) + ".svg";
+        pg = createGraphics(1024, 1024, SVG, filePath);
+        pg.beginDraw();
+        pg.background(bgColor);
+        pg.noStroke();
+        pg.fill(shapeFill);
+
+        ArrayList<Integer> indices = new ArrayList<Integer>();
+        for (int i = 0; i < svgs.length; i++) indices.add(i);
+        Collections.shuffle(indices);
+
+        for (int i = 0; i < numberOfShapes; i++) {
+            int idx = indices.get(i);
+            float w = svgs[idx].width;
+            float h = svgs[idx].height;
+            float x = random(w/2, pg.width - w/2);
+            float y = random(h/2, pg.height - h/2);
+            float scaleFactor = shapeSize / max(w, h);  // Calculate scale factor to maintain aspect ratio
+
+            pg.pushMatrix();
+            pg.translate(x, y);
+            pg.scale(scaleFactor);  // Apply scaling to maintain proportions
+            pg.shape(svgs[idx], -w/2, -h/2);
+            pg.popMatrix();
+        }
+
+        pg.endDraw();
+        pg.dispose();
+    }
 }
