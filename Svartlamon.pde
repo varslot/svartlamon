@@ -129,8 +129,8 @@ void updatePreview() {
     int idx = indices.get(i);
     float w = svgs[idx].width;
     float h = svgs[idx].height;
-    float x = random(w * scaleFactor / 2, preview.width - (w * scaleFactor / 2));
-    float y = random(h * scaleFactor / 2, preview.height - (h * scaleFactor / 2));
+    float x = random(0, preview.width);
+    float y = random(0, preview.height);
     float angle = random(TWO_PI);  // Random angle for rotation in radians
 
     preview.pushMatrix();  // Save the current state of the matrix
@@ -173,8 +173,8 @@ void exportSVGs() {
       int idx = indices.get(i);
       float w = svgs[idx].width;
       float h = svgs[idx].height;
-      float x = random(w * scaleFactor / 2, pg.width - (w * scaleFactor / 2));
-      float y = random(h * scaleFactor / 2, pg.height - (h * scaleFactor / 2));
+      float x = random(0, pg.width);
+      float y = random(0, pg.height);
       float angle = random(TWO_PI);  // Random angle for rotation in radians
 
       pg.pushMatrix();
